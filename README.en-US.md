@@ -25,6 +25,10 @@ window.
 > optionally verify the adjacent `.sha256` file. The EXE is built entirely from
 > public source in this repository and downloads no executable code.
 
+## Support the project
+
+This project is free and open source. If it helped you, you can [voluntarily support its maintenance through Alipay, WeChat Pay, or PayPal](SUPPORT.md). Sponsorship does not affect functionality, licensing, or issue handling.
+
 ## Highlights
 
 - Benchmarks validated IPv6 candidates on first run, picks the fastest one, and immediately verifies the unattended scheduled task
