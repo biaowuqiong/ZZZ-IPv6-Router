@@ -1,0 +1,6 @@
+.idea/
+.vscode/
+*.log
+status.json
+settings.json
+.test-run/

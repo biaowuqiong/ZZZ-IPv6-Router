@@ -1,0 +1,18 @@
+{
+  "targetHost": "autopatchcn.juequling.com",
+  "probeUrl": "https://autopatchcn.juequling.com/package_download/op/client_app/download/20240618183950_ehxltROsR67s5q43/gwpc/ZenlessZoneZero_setup_202406181742.exe",
+  "knownCandidates": [
+    "2402:4e00:111:10d1::16",
+    "2402:4e00:43:ea::13",
+    "2001:da8:20d:40da:3::12",
+    "2001:da8:20d:40da:3::13"
+  ],
+  "discoveryDomains": [
+    "st-dl-eccdnx.tliveapp.com",
+    "xz.pphimalayanrt.com.m.alikunlun.com"
+  ],
+  "benchmarkBytes": 4194304,
+  "benchmarkIntervalDays": 7,
+  "connectTimeoutSeconds": 5,
+  "maximumProbeSeconds": 20
+}
