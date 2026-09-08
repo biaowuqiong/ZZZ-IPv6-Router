@@ -4,6 +4,16 @@
 
 它不是代理、VPN 或“IPv4 转 IPv6”隧道。工具会测速候选 IPv6 CDN，并且只有在原始下载域名的 TLS 证书校验和 HTTP Range 请求均通过后，才写入 Windows `hosts`。VPN/TUN 模式可以保持开启。
 
+## 最简单的用法（推荐）
+
+1. 打开 [Releases](https://github.com/biaowuqiong/ZZZ-IPv6-Router/releases)，下载名称以 `windows.exe` 结尾的文件。
+2. 双击 EXE，并在 Windows 用户账户控制窗口中选择“是”。
+3. 点击蓝色的“**一键启用 IPv6 加速**”，等待状态显示“IPv6 加速已启用”。
+
+无需安装 PowerShell 模块、.NET SDK 或其他软件。测速、计划任务和后续维护都会自动完成，也可以在同一个窗口中重新测速或卸载。
+
+> 当前 EXE 没有商业代码签名证书，因此 Windows SmartScreen 可能显示“未知发布者”。请只从本仓库 Release 下载，并可使用同名 `.sha256` 文件核对完整性。EXE 完全由仓库中的公开源码构建，不会从互联网下载可执行代码。
+
 ## 特性
 
 - 首次运行对候选 IPv6 节点测速，选择当前网络下最快的有效节点
@@ -11,6 +21,7 @@
 - 节点失效且没有替代节点时，删除托管映射并自动回退默认 DNS
 - 只管理 `autopatchcn.juequling.com`，不改系统 IPv4/IPv6 优先级
 - 不安装驱动、证书、代理或第三方二进制文件
+- 提供单文件图形界面，无需使用命令行
 - 提供完整卸载脚本，并尽量恢复安装前已有的同域名记录
 
 ## 系统要求
@@ -20,7 +31,7 @@
 - Windows PowerShell 5.1 或 PowerShell 7
 - 管理员权限（修改 `hosts` 和创建计划任务所必需）
 
-## 安装
+## PowerShell 安装（高级用户）
 
 下载或克隆本仓库，检查脚本内容后，以管理员身份打开 PowerShell，在项目目录执行：
 

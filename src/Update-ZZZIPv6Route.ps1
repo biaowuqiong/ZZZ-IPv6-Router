@@ -15,6 +15,8 @@ $previousHostsPath = Join-Path $DataDirectory 'hosts.previous'
 $nextHostsPath = Join-Path $DataDirectory 'hosts.next'
 $beginMarker = '# BEGIN ZZZ IPv6 Router'
 $endMarker = '# END ZZZ IPv6 Router'
+$legacyBeginMarker = '# BEGIN Codex ZZZ IPv6 Router'
+$legacyEndMarker = '# END Codex ZZZ IPv6 Router'
 
 New-Item -ItemType Directory -Path $DataDirectory -Force | Out-Null
 
@@ -60,11 +62,21 @@ function Invoke-CandidateProbe {
     $lastByte = $Bytes - 1
     $resolve = "${targetHost}:443:[${Address}]"
     $writeOut = '%{http_code}|%{size_download}|%{speed_download}|%{ssl_verify_result}'
-    $output = & $curl.Source -q -sS --noproxy '*' --proto '=https' --tlsv1.2 `
-        --range "0-$lastByte" --connect-timeout $connectTimeoutSeconds `
-        --max-time $maximumProbeSeconds --max-filesize $Bytes -o NUL `
-        -w $writeOut --resolve $resolve $probeUrl 2>$null
-    $curlExit = $LASTEXITCODE
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell can promote native stderr to a terminating error when
+        # ErrorActionPreference is Stop. A failed candidate must remain a normal
+        # validation result so the next candidate and DNS fallback can run.
+        $ErrorActionPreference = 'Continue'
+        $output = & $curl.Source -q -sS --noproxy '*' --proto '=https' --tlsv1.2 `
+            --range "0-$lastByte" --connect-timeout $connectTimeoutSeconds `
+            --max-time $maximumProbeSeconds --max-filesize $Bytes -o NUL `
+            -w $writeOut --resolve $resolve $probeUrl 2>$null
+        $curlExit = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
 
     if ($curlExit -ne 0) {
         return $null
@@ -131,17 +143,29 @@ function Remove-ManagedRoute {
         [switch]$RemoveAllTargetEntries
     )
 
-    $beginIndex = [Array]::IndexOf($Lines, $beginMarker)
-    $endIndex = [Array]::IndexOf($Lines, $endMarker)
-    $hasValidBlock = $beginIndex -ge 0 -and $endIndex -gt $beginIndex
+    $markerPairs = @(
+        [pscustomobject]@{ Begin = $beginMarker; End = $endMarker },
+        [pscustomobject]@{ Begin = $legacyBeginMarker; End = $legacyEndMarker }
+    )
+    $managedIndexes = [Collections.Generic.HashSet[int]]::new()
+    foreach ($pair in $markerPairs) {
+        $beginIndex = [Array]::IndexOf($Lines, [string]$pair.Begin)
+        $endIndex = [Array]::IndexOf($Lines, [string]$pair.End)
+        if ($beginIndex -ge 0 -and $endIndex -gt $beginIndex) {
+            for ($index = $beginIndex; $index -le $endIndex; $index++) {
+                [void]$managedIndexes.Add($index)
+            }
+        }
+    }
+    $knownMarkers = @($beginMarker, $endMarker, $legacyBeginMarker, $legacyEndMarker)
     $result = [Collections.Generic.List[string]]::new()
 
     for ($index = 0; $index -lt $Lines.Count; $index++) {
         $line = $Lines[$index]
-        if ($hasValidBlock -and $index -ge $beginIndex -and $index -le $endIndex) {
+        if ($managedIndexes.Contains($index)) {
             continue
         }
-        if ($line -eq $beginMarker -or $line -eq $endMarker) {
+        if ($knownMarkers -contains $line) {
             continue
         }
 

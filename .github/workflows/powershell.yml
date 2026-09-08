@@ -15,3 +15,6 @@ jobs:
       - name: Parse PowerShell scripts
         shell: pwsh
         run: ./tests/Test-ScriptSyntax.ps1
+      - name: Verify safe DNS fallback
+        shell: powershell
+        run: .\tests\Test-Fallback.ps1

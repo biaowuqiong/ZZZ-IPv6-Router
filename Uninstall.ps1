@@ -24,6 +24,8 @@ $originalTargetLinesPath = Join-Path $dataDirectory 'original-target-lines.txt'
 $systemHosts = Join-Path ([Environment]::GetFolderPath('System')) 'drivers\etc\hosts'
 $beginMarker = '# BEGIN ZZZ IPv6 Router'
 $endMarker = '# END ZZZ IPv6 Router'
+$legacyBeginMarker = '# BEGIN Codex ZZZ IPv6 Router'
+$legacyEndMarker = '# END Codex ZZZ IPv6 Router'
 $targetHost = 'autopatchcn.juequling.com'
 
 if (Test-Path -LiteralPath $settingsPath) {
@@ -37,19 +39,32 @@ if (Test-Path -LiteralPath $settingsPath) {
 
 if ($PSCmdlet.ShouldProcess($taskName, 'Unregister scheduled task')) {
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName 'Codex-ZZZ-IPv6-Router' -Confirm:$false -ErrorAction SilentlyContinue
 }
 
 $lines = [IO.File]::ReadAllLines($systemHosts)
-$beginIndex = [Array]::IndexOf($lines, $beginMarker)
-$endIndex = [Array]::IndexOf($lines, $endMarker)
-$hasValidBlock = $beginIndex -ge 0 -and $endIndex -gt $beginIndex
+$markerPairs = @(
+    [pscustomobject]@{ Begin = $beginMarker; End = $endMarker },
+    [pscustomobject]@{ Begin = $legacyBeginMarker; End = $legacyEndMarker }
+)
+$managedIndexes = [Collections.Generic.HashSet[int]]::new()
+foreach ($pair in $markerPairs) {
+    $beginIndex = [Array]::IndexOf($lines, [string]$pair.Begin)
+    $endIndex = [Array]::IndexOf($lines, [string]$pair.End)
+    if ($beginIndex -ge 0 -and $endIndex -gt $beginIndex) {
+        for ($index = $beginIndex; $index -le $endIndex; $index++) {
+            [void]$managedIndexes.Add($index)
+        }
+    }
+}
+$knownMarkers = @($beginMarker, $endMarker, $legacyBeginMarker, $legacyEndMarker)
 $cleanLines = [Collections.Generic.List[string]]::new()
 
 for ($index = 0; $index -lt $lines.Count; $index++) {
-    if ($hasValidBlock -and $index -ge $beginIndex -and $index -le $endIndex) {
+    if ($managedIndexes.Contains($index)) {
         continue
     }
-    if ($lines[$index] -eq $beginMarker -or $lines[$index] -eq $endMarker) {
+    if ($knownMarkers -contains $lines[$index]) {
         continue
     }
     [void]$cleanLines.Add($lines[$index])

@@ -16,7 +16,7 @@ function Assert-Administrator {
 
 function Test-ActiveTargetEntry {
     param(
-        [Parameter(Mandatory)][string]$Line,
+        [string]$Line,
         [Parameter(Mandatory)][string]$TargetHost
     )
 
@@ -37,6 +37,11 @@ $originalHostsPath = Join-Path $dataDirectory 'hosts.original'
 $originalTargetLinesPath = Join-Path $dataDirectory 'original-target-lines.txt'
 $systemHosts = Join-Path ([Environment]::GetFolderPath('System')) 'drivers\etc\hosts'
 $taskName = 'ZZZ-IPv6-Router'
+$legacyTaskName = 'Codex-ZZZ-IPv6-Router'
+$managedMarkerPairs = @(
+    [pscustomobject]@{ Begin = '# BEGIN ZZZ IPv6 Router'; End = '# END ZZZ IPv6 Router' },
+    [pscustomobject]@{ Begin = '# BEGIN Codex ZZZ IPv6 Router'; End = '# END Codex ZZZ IPv6 Router' }
+)
 
 if (-not (Test-Path -LiteralPath $sourceUpdater) -or -not (Test-Path -LiteralPath $sourceSettings)) {
     throw 'Required project files are missing. Keep the repository folder structure intact.'
@@ -51,9 +56,25 @@ if (-not (Test-Path -LiteralPath $originalHostsPath)) {
 
 if (-not (Test-Path -LiteralPath $originalTargetLinesPath)) {
     $targetHost = [string](Get-Content -LiteralPath $sourceSettings -Raw | ConvertFrom-Json).targetHost
-    $originalTargetLines = @([IO.File]::ReadAllLines($systemHosts) | Where-Object {
-        Test-ActiveTargetEntry -Line $_ -TargetHost $targetHost
-    })
+    $hostLines = [IO.File]::ReadAllLines($systemHosts)
+    $managedIndexes = [Collections.Generic.HashSet[int]]::new()
+    foreach ($pair in $managedMarkerPairs) {
+        $beginIndex = [Array]::IndexOf($hostLines, [string]$pair.Begin)
+        $endIndex = [Array]::IndexOf($hostLines, [string]$pair.End)
+        if ($beginIndex -ge 0 -and $endIndex -gt $beginIndex) {
+            for ($index = $beginIndex; $index -le $endIndex; $index++) {
+                [void]$managedIndexes.Add($index)
+            }
+        }
+    }
+    $originalTargetLines = @(
+        for ($index = 0; $index -lt $hostLines.Count; $index++) {
+            if (-not $managedIndexes.Contains($index) -and
+                (Test-ActiveTargetEntry -Line $hostLines[$index] -TargetHost $targetHost)) {
+                $hostLines[$index]
+            }
+        }
+    )
     [IO.File]::WriteAllLines($originalTargetLinesPath, $originalTargetLines, [Text.UTF8Encoding]::new($false))
 }
 
@@ -77,6 +98,9 @@ $task = New-ScheduledTask -Action $action -Trigger @($logonTrigger, $periodicTri
     -Principal $principal -Settings $settings `
     -Description 'Selects a TLS-validated IPv6 CDN route for Zenless Zone Zero CN downloads.'
 Register-ScheduledTask -TaskName $taskName -InputObject $task -Force | Out-Null
+
+# Migrate the private prototype task, if present. Its data backup is retained.
+Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
 
 try {
     & $installedUpdater -ForceBenchmark

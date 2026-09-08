@@ -10,6 +10,21 @@ CDN endpoints and updates one Windows hosts entry only after the original
 download hostname passes TLS certificate validation and a valid HTTP Range
 request. An existing VPN/TUN mode can remain enabled.
 
+## Easiest setup (recommended)
+
+1. Open [Releases](https://github.com/biaowuqiong/ZZZ-IPv6-Router/releases) and download the file ending in `windows.exe`.
+2. Double-click the EXE and approve the Windows User Account Control prompt.
+3. Click the blue **一键启用 IPv6 加速** button and wait for the ready status.
+
+No PowerShell module, .NET SDK, or third-party package is required. Benchmarking,
+scheduled maintenance, status, and uninstall actions are all available in the same
+window.
+
+> The EXE is not commercially code-signed, so Windows SmartScreen may display an
+> unknown-publisher warning. Download it only from this repository's Releases and
+> optionally verify the adjacent `.sha256` file. The EXE is built entirely from
+> public source in this repository and downloads no executable code.
+
 ## Highlights
 
 - Benchmarks validated IPv6 candidates on first run and picks the fastest one
@@ -17,6 +32,7 @@ request. An existing VPN/TUN mode can remain enabled.
 - Falls back to normal DNS automatically when no compatible IPv6 route remains
 - Manages only `autopatchcn.juequling.com`
 - Installs no driver, certificate, proxy, or third-party binary
+- Provides a single-file GUI with no command line required
 - Includes a scoped uninstaller that preserves unrelated hosts-file changes
 
 ## Requirements
@@ -26,7 +42,7 @@ request. An existing VPN/TUN mode can remain enabled.
 - Windows PowerShell 5.1 or PowerShell 7
 - Administrator rights to edit the hosts file and create a scheduled task
 
-## Install
+## PowerShell install (advanced)
 
 Download or clone this repository, inspect the scripts, open PowerShell as
 Administrator in the project directory, and run:

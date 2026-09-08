@@ -10,6 +10,11 @@ The updater accepts an IPv6 endpoint only after the original ZZZ CDN hostname
 passes certificate verification and returns a valid HTTP partial-content response.
 It does not install a certificate, proxy, driver, VPN, or background network service.
 
+The release EXE is a small .NET Framework GUI compiled entirely from this
+repository. The PowerShell scripts and default configuration are embedded as
+resources; the program does not download executable code. Every release includes
+a SHA-256 checksum generated during the build.
+
 ## Reporting a vulnerability
 
 Please open a GitHub security advisory instead of a public issue when a report

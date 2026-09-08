@@ -4,3 +4,4 @@
 status.json
 settings.json
 .test-run/
+dist/
