@@ -33,6 +33,9 @@ try {
         throw 'The updater did not enter its safe default-DNS fallback state.'
     }
 
+    # The deliberately unreachable curl probe leaves a native exit code behind.
+    # Reset it so shells that dot-source this test do not report a false failure.
+    $global:LASTEXITCODE = 0
     Write-Host 'Validated safe fallback with an unreachable IPv6 candidate.'
 }
 finally {
