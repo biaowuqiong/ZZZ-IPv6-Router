@@ -39,7 +39,7 @@
 powershell -ExecutionPolicy Bypass -File .\Install.ps1
 ```
 
-安装后会立即测速并应用路由，同时创建计划任务 `ZZZ-IPv6-Router`。运行以下命令查看最近一次结果：
+安装后会立即测速并应用路由，同时创建并立即试运行一次计划任务 `ZZZ-IPv6-Router`；无需等待首次五分钟触发即可确认自动维护正常。运行以下命令查看最近一次结果：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Get-Status.ps1

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2026-09-08
+
+- Start the SYSTEM maintenance task immediately after installation and wait up to 20 seconds for a successful result.
+- Keep the regular six-hour maintenance interval while removing the five-minute first-run verification delay.
+- Clarify the GUI progress message and documentation for automatic-task verification.
+
 ## 0.2.0 - 2026-09-08
 
 - Add a one-window Chinese GUI with install, benchmark, status, and uninstall actions.

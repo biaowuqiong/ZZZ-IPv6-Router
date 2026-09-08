@@ -102,12 +102,48 @@ Register-ScheduledTask -TaskName $taskName -InputObject $task -Force | Out-Null
 # Migrate the private prototype task, if present. Its data backup is retained.
 Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
 
+$initialRouteReady = $false
 try {
     & $installedUpdater -ForceBenchmark
+    $initialRouteReady = $true
 }
 catch {
     Write-Warning $_.Exception.Message
     Write-Warning 'Installation completed, but no compatible IPv6 CDN is currently available. The scheduled task will retry later.'
+}
+
+# Run the SYSTEM task immediately so installation verifies the same unattended
+# path that will maintain the route after logon. The regular six-hour schedule
+# remains unchanged; this one-time start avoids waiting five minutes to test it.
+if ($initialRouteReady) {
+    $taskInfoBefore = Get-ScheduledTaskInfo -TaskName $taskName
+    $taskValidationDeadline = (Get-Date).AddSeconds(20)
+    Start-ScheduledTask -TaskName $taskName
+
+    $taskInfo = $null
+    $taskState = $null
+    $taskHasRun = $false
+    do {
+        Start-Sleep -Milliseconds 500
+        $taskState = (Get-ScheduledTask -TaskName $taskName).State
+        $taskInfo = Get-ScheduledTaskInfo -TaskName $taskName
+        $taskHasRun = $taskInfo.LastRunTime -gt $taskInfoBefore.LastRunTime
+    } while ((-not $taskHasRun -or $taskState -eq 'Running') -and (Get-Date) -lt $taskValidationDeadline)
+
+    if (-not $taskHasRun) {
+        throw 'The scheduled task did not start within 20 seconds.'
+    }
+    if ($taskState -eq 'Running') {
+        throw 'The scheduled task did not finish within 20 seconds.'
+    }
+    if ($taskInfo.LastTaskResult -ne 0) {
+        throw "The scheduled task validation failed with result $($taskInfo.LastTaskResult)."
+    }
+
+    Write-Host 'Automatic scheduled-task validation passed.'
+}
+else {
+    Write-Warning 'Immediate scheduled-task validation was skipped because the initial IPv6 probe did not succeed.'
 }
 
 Write-Host 'ZZZ IPv6 Router installed successfully.'

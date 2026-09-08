@@ -55,7 +55,7 @@ foreach ($entry in $expected.GetEnumerator()) {
 }
 
 $version = [Diagnostics.FileVersionInfo]::GetVersionInfo($resolvedExe).FileVersion
-if ($version -ne '0.2.0.0') {
+if ($version -ne '0.2.1.0') {
     throw "Unexpected EXE version: $version"
 }
 

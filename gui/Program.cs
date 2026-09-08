@@ -14,8 +14,8 @@ using System.Windows.Forms;
 [assembly: AssemblyCompany("biaowuqiong")]
 [assembly: AssemblyProduct("ZZZ IPv6 Router")]
 [assembly: AssemblyCopyright("Copyright © 2026 biaowuqiong")]
-[assembly: AssemblyVersion("0.2.0.0")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyVersion("0.2.1.0")]
+[assembly: AssemblyFileVersion("0.2.1.0")]
 
 namespace ZZZIPv6Router
 {
@@ -32,7 +32,7 @@ namespace ZZZIPv6Router
 
     internal sealed class MainForm : Form
     {
-        private const string Version = "0.2.0";
+        private const string Version = "0.2.1";
         private const string RepositoryUrl = "https://github.com/biaowuqiong/ZZZ-IPv6-Router";
 
         private readonly Label statusTitle;
@@ -185,7 +185,7 @@ namespace ZZZIPv6Router
 
         private async void InstallButtonClick(object sender, EventArgs e)
         {
-            await RunScriptAction("正在安装并测速，请稍候…", "Install.ps1", "");
+            await RunScriptAction("正在安装、测速并验证自动任务，请稍候…", "Install.ps1", "");
         }
 
         private async void BenchmarkButtonClick(object sender, EventArgs e)

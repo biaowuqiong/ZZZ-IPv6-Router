@@ -27,7 +27,7 @@ window.
 
 ## Highlights
 
-- Benchmarks validated IPv6 candidates on first run and picks the fastest one
+- Benchmarks validated IPv6 candidates on first run, picks the fastest one, and immediately verifies the unattended scheduled task
 - Runs a lightweight health check every 6 hours and re-benchmarks every 7 days
 - Falls back to normal DNS automatically when no compatible IPv6 route remains
 - Manages only `autopatchcn.juequling.com`
