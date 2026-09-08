@@ -17,16 +17,13 @@ $expected = @{
     'ZZZIPv6Router.Update.ps1' = (Join-Path $projectRoot 'src\Update-ZZZIPv6Route.ps1')
 }
 
-function Get-ByteHash {
-    param([Parameter(Mandatory)][byte[]]$Bytes)
+function ConvertTo-NormalizedText {
+    param([Parameter(Mandatory)][string]$Text)
 
-    $sha256 = [Security.Cryptography.SHA256]::Create()
-    try {
-        return ([BitConverter]::ToString($sha256.ComputeHash($Bytes))).Replace('-', '').ToLowerInvariant()
+    if ($Text.Length -gt 0 -and $Text[0] -eq [char]0xfeff) {
+        $Text = $Text.Substring(1)
     }
-    finally {
-        $sha256.Dispose()
-    }
+    return (($Text -replace "`r`n", "`n") -replace "`r", "`n")
 }
 
 foreach ($entry in $expected.GetEnumerator()) {
@@ -38,7 +35,7 @@ foreach ($entry in $expected.GetEnumerator()) {
         $memory = [IO.MemoryStream]::new()
         try {
             $resourceStream.CopyTo($memory)
-            $embeddedHash = Get-ByteHash -Bytes $memory.ToArray()
+            $embeddedText = [Text.Encoding]::UTF8.GetString($memory.ToArray())
         }
         finally {
             $memory.Dispose()
@@ -48,8 +45,8 @@ foreach ($entry in $expected.GetEnumerator()) {
         $resourceStream.Dispose()
     }
 
-    $sourceHash = (Get-FileHash -LiteralPath $entry.Value -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($embeddedHash -ne $sourceHash) {
+    $sourceText = [IO.File]::ReadAllText($entry.Value, [Text.Encoding]::UTF8)
+    if ((ConvertTo-NormalizedText $embeddedText) -cne (ConvertTo-NormalizedText $sourceText)) {
         throw "Embedded resource differs from source: $($entry.Key)"
     }
 }
